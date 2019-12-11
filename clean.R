@@ -5,39 +5,81 @@ library(dplyr)
 
 # read csv files
 files <- list.files()
-pos <- grep(pattern = "carrefour", x = files)
-files <- files[pos]
 csv <- grep(pattern = ".csv", x = files)
 files <- files[csv]
+prod <- grep(pattern = "produsv1", x = files)
+cod <- grep(pattern = "codificat", x = files)
+files <- files[c(prod, cod)]
 
 dbf_list <- lapply(files, function(x) suppressMessages(read.csv(file=x, stringsAsFactors = FALSE)))
 
 for (i in seq(dbf_list)) assign(files[i], dbf_list[[i]])
 
 
+add_idmag <- function(df) {
+  x <- 0 
+  if (df$RobotName[1] == "carrefour.js") {
+    x <- 1
+  } else if (df$RobotName[1] == "cora") {
+    x <- 2
+  } else if (df$RobotName[1] == "m_image.js") {
+    x <- 3
+  }
+  return (x)
+}
+
 clean_colnames <- function (df) {
-  coln <- names(df)
-  poscol <- grep("(reducere|robotname|robotversion|sortimente)", tolower(coln))
-  df <- df[-poscol]
-  names(df)[1] <- "Denumire"
-  names(df)[2] <- "Pret"
-  names(df)[3] <- "Data"
-  df$Descriere <- NA
-  df$idMag <- 1
-  df$Um <- NA
-  df <- df[,c(1,4,2,6,3,5)] #pot sa adaug numele coloanelor
+  coln <- tolower(names(df))
+  idmag <- add_idmag(df)
+  poscol <- grep("(reducere|robotname|robotversion)", coln)
+  if (length(poscol) != 0) {
+    df <- df[-poscol]
+    coln <- tolower(names(df))
+  }
+  colnames(df)[which(coln == "nume")] <- "Denumire"
+  colnames(df)[which(coln == "pret")] <- "Pret"
+  colnames(df)[which(coln == "date")] <- "Data"
+  
   df <- df[!duplicated(df$Denumire), ]
   
+  df$Descriere <- NA
+  df$Um <- NA
+  df$idMag <- idmag
+  
+  poscoltbl <- grep("(Denumire|Descriere|Pret|Um|Data|idMag)", names(df))
+  if (length(poscoltbl)!=ncol(df)) {
+    col <- 1:ncol(df)
+    diff <- setdiff(col,poscoltbl)
+    if (length(diff) == 1) {
+      df$Descriere <- paste(names(df)[diff[1]], df[,diff[1]], sep = ": ")
+    } else {
+      x <- ""
+      for (i in diff) {
+        x <- paste(x, names(df)[i],": ", df[,i])
+      }
+      df$Descriere <- x
+    }
+  }
+
+  df <- df[,c("Denumire", "Descriere", "Pret", "Um", "Data", "idMag")]
+
   return (df)
 }
 
-clean_data <- function (df) {
+
+get_date <- function (df) {
   df <- clean_colnames(df)
   y <- substr(df$Data, 1, 4)
   m <- substr(df$Data, 5, 6)
   d <- substr(df$Data, 7, 8)
-  
   df$Data <- paste(y, m, d, sep = "-")
+  
+  return(df)
+}
+
+
+get_price <- function (df) {
+  getp <- strsplit(df$Pret, " ")
   getum <- strsplit(df$Pret, "/")
   um <- ""
   for (i in 1:length(getum)) {
@@ -55,6 +97,10 @@ clean_data <- function (df) {
   return (df)
 }
 
+d <- get_price(df)
+
+fl <- files[prod] 
+for (i in fl) assign(i, clean_data(get(i)))
 
 match_sort <- function (df) {
   colmag <- grep(pattern = "idMag", x = names(df))
@@ -68,6 +114,7 @@ match_sort <- function (df) {
   
   return(df)
 }
+
 
 
 js <- grep(pattern = "jsprodusv1", x = files)
