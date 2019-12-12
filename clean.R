@@ -79,67 +79,85 @@ get_date <- function (df) {
 
 
 get_price <- function (df) {
-  getp <- strsplit(df$Pret, " ")
-  getum <- strsplit(df$Pret, "/")
-  um <- ""
-  for (i in 1:length(getum)) {
-    um[i] <- getum[[i]][2]
+  df <- get_date(df)
+  df$Pret <- as.character(df$Pret)
+  split_price <- str_split(df$Pret, " ", 2)
+  price <- ""
+  for (i in 1:length(split_price)) {
+    price[i] <- split_price[[i]][1]
   }
+  if (length(split_price[[1]])) {
+    um <- ""
+    for (i in 1:length(split_price)) {
+      um[i] <- split_price[[i]][2]
+    }
+  } else {
+    um <- NA
+  }
+  df$Pret <- price
   df$Um <- um
+ 
+  if (grepl("\\.", x = df$Pret[1])) {    # if
+    df$Pret <- as.numeric(df$Pret)
+  } else {
+    n <- substr(df$Pret, 1, nchar(df$Pret)-2)
+    z <- substr(df$Pret, nchar(df$Pret)-1, nchar(df$Pret))
+    df$Pret <- paste(n, z, sep = ".")
+    df$Pret <- as.numeric(df$Pret)
+  }
   
-  df$Pret <- gsub("([0-9]+).*$", "\\1", df$Pret)
-  n <- substr(df$Pret, 1, nchar(df$Pret)-2)
-  z <- substr(df$Pret, nchar(df$Pret)-1, nchar(df$Pret))
-  df$Pret <- paste(n, z, sep = ".")
-  df$Pret <- as.numeric(df$Pret)
+  # df$Pret <- gsub("([0-9]+).*$", "\\1", df$Pret)
+
   df$Denumire <- gsub(",","", df$Denumire)
   
   return (df)
 }
 
-d <- get_price(df)
-
-fl <- files[prod] 
-for (i in fl) assign(i, clean_data(get(i)))
 
 match_sort <- function (df) {
   colmag <- grep(pattern = "idMag", x = names(df))
   if (length(colmag) == 0) {
-    df <- clean_data(df)
+    df <- get_price(df)
   }
   colsort <- grep(pattern = "idSort", x = names(df))
   if (length(colsort) == 0) {
-    df <- left_join(df, carrefour_codificat.csv[,c(1,5)], by = c("Denumire"="nume"))
+    if (df$idMag[1] == 1) {
+      df <- left_join(df, carrefour_codificat.csv[,c(1,5)], by = c("Denumire"="nume"))
+    } else if (df$idMag[1] == 2) {
+      df <- left_join(df, cora_codificat.csv[,c(1,5)], by = c("Denumire"="nume"))
+    } else if (df$idMag[1] == 3) {
+      df <- left_join(df, mega_codificat.csv[,c(1,3)], by = c("Denumire"="nume"))
+    }
   }
   
   return(df)
 }
 
-
-
-js <- grep(pattern = "jsprodusv1", x = files)
-files <- files[js]
-for (i in files) assign(i, match_sort(get(i)))
-
-path <- paste0(getwd(), "/OK")
-for (i in files) write.table(get(i), file = paste0(path, "/", i), sep = ",", col.names = FALSE, row.names = FALSE)  
+fl <- files[prod] 
+for (i in fl) assign(i, match_sort(get(i)))
 
 
 
 
-
-# Populate tables
-
-conn <- dbConnect(RSQLite::SQLite(), "C:/sqlite/IPC.db")
-
-dbSendQuery(conn, 'INSERT INTO magazine (idMag, Nume, Adresa) VALUES (:idMag, :Nume, :Adresa);', magazine)
-
-dbSendQuery(conn, 'INSERT INTO produse (Denumire, Descriere, Pret, Um, Data, idMag, idSort) VALUES (:Denumire, :Descriere, :Pret, :Um, :Data, :idMag, :idSort);', df)
-
-dbListTables(conn)
-dbGetQuery(conn, "DELETE FROM magazine")
-dbGetQuery(conn, "SELECT * FROM magazine")
-dbGetQuery(conn, "SELECT * FROM produse LIMIT 10")
-t <- dbReadTable(conn, "produse")
+# js <- grep(pattern = "jsprodusv1", x = files)
+# files <- files[js]
+# for (i in files) assign(i, match_sort(get(i)))
+# 
+# path <- paste0(getwd(), "/OK")
+# for (i in files) write.table(get(i), file = paste0(path, "/", i), sep = ",", col.names = FALSE, row.names = FALSE)  
+# 
+# # Populate tables
+# 
+# conn <- dbConnect(RSQLite::SQLite(), "C:/sqlite/IPC.db")
+# 
+# dbSendQuery(conn, 'INSERT INTO magazine (idMag, Nume, Adresa) VALUES (:idMag, :Nume, :Adresa);', magazine)
+# 
+# dbSendQuery(conn, 'INSERT INTO produse (Denumire, Descriere, Pret, Um, Data, idMag, idSort) VALUES (:Denumire, :Descriere, :Pret, :Um, :Data, :idMag, :idSort);', df)
+# 
+# dbListTables(conn)
+# dbGetQuery(conn, "DELETE FROM magazine")
+# dbGetQuery(conn, "SELECT * FROM magazine")
+# dbGetQuery(conn, "SELECT * FROM produse LIMIT 10")
+# t <- dbReadTable(conn, "produse")
 
 
