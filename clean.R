@@ -1,19 +1,42 @@
 
 #################### This script is used for cleaning the files obtained from webscraping #####################
-
+rm(list=ls())
 library(dplyr)
+library(stringr)
 
 # read csv files
+# files <- list.files()
+# csv <- grep(pattern = ".csv", x = files)
+# files <- files[csv]
+# prod <- grep(pattern = "produsv1", x = files)
+# cod <- grep(pattern = "codificat", x = files)
+# files <- files[c(prod, cod)]
+
+# read xlsx files
 files <- list.files()
-csv <- grep(pattern = ".csv", x = files)
-files <- files[csv]
-prod <- grep(pattern = "produsv1", x = files)
-cod <- grep(pattern = "codificat", x = files)
-files <- files[c(prod, cod)]
+xlsx <- grep(pattern = ".xlsx", x = files)
+xls <- files[xlsx]
+csv <- grep(pattern = "mega_codificat", x = files)
+csv <- files[csv]
 
-dbf_list <- lapply(files, function(x) suppressMessages(read.csv(file=x, stringsAsFactors = FALSE)))
+dbf_list <- lapply(xls, function(x) suppressMessages(read_excel(x)))
+for (i in seq(dbf_list)) assign(xls[i], dbf_list[[i]])
+csv_list <- lapply(csv, function(x) suppressMessages(read.csv(file=x, stringsAsFactors = FALSE)))
+for (i in seq(csv_list)) assign(csv[i], csv_list[[i]])
 
-for (i in seq(dbf_list)) assign(files[i], dbf_list[[i]])
+cleanxls <- function (df) {
+  df <- as.data.frame(df)
+  df <- df[,-c(1)]
+  df[, ] <- lapply(df[, ], as.character)
+  df$RobotName <- "m_image.js"
+  return (df)
+}
+for (i in xls) {
+  assign(i, cleanxls(get(i)))
+}
+# dbf_list <- lapply(files, function(x) suppressMessages(read.csv(file=x, stringsAsFactors = FALSE)))
+# 
+# for (i in seq(dbf_list)) assign(files[i], dbf_list[[i]])
 
 
 add_idmag <- function(df) {
@@ -51,7 +74,7 @@ clean_colnames <- function (df) {
     col <- 1:ncol(df)
     diff <- setdiff(col,poscoltbl)
     if (length(diff) == 1) {
-      df$Descriere <- paste(names(df)[diff[1]], df[,diff[1]], sep = ": ")
+      df$Descriere <- paste(names(df)[diff[1]], ": ", df[,diff[1]])
     } else {
       x <- ""
       for (i in diff) {
@@ -129,13 +152,25 @@ match_sort <- function (df) {
       df <- left_join(df, mega_codificat.csv[,c(1,3)], by = c("Denumire"="nume"))
     }
   }
-  
+  pretna <- which(is.na(df$Pret))
+  if (length(pretna) != 0 ) {
+    df <- df[-pretna,]
+  }
+  df <- df[!duplicated(df$Denumire),]
   return(df)
 }
 
-fl <- files[prod] 
-for (i in fl) assign(i, match_sort(get(i)))
+# fl <- files[prod] 
+# for (i in fl) {
+#   print(i)
+#   assign(i, match_sort(get(i)))
+# }
 
+
+for (i in xls) {
+  print(i)
+  assign(i, match_sort(get(i)))
+}
 
 
 
@@ -160,4 +195,4 @@ for (i in fl) assign(i, match_sort(get(i)))
 # dbGetQuery(conn, "SELECT * FROM produse LIMIT 10")
 # t <- dbReadTable(conn, "produse")
 
-
+d <- duplicated(`20180716carrefour.jsprodusv1.csv`$nume)
