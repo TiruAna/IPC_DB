@@ -48,6 +48,7 @@ dbSendQuery(conn = ipcdb,
               idSort INTEGER,
               CONSTRAINT idProduse_UNIQUE
               UNIQUE(idProduse),
+              UNIQUE(Denumire,Data,idMag)
               CONSTRAINT fk_Produse_Magazine
               FOREIGN KEY(idMag)
               REFERENCES magazine(idMag),
@@ -56,7 +57,13 @@ dbSendQuery(conn = ipcdb,
               REFERENCES sortimente(idSort))"
            )
 
+dbDisconnect(ipcdb)
+
+
+# Mondify db
+
 dbListTables(ipcdb)
 
-dbDisconnect(ipcdb)
-#unlink("my-db.sqlite")
+ipcdb <- dbConnect(RSQLite::SQLite(), "IPC.db")
+dbGetQuery(ipcdb, "drop table produse")
+dbGetQuery(ipcdb, "delete from produse where idProduse > 1")
