@@ -26,3 +26,22 @@ m$Post_cheltuieli <- as.numeric(m$Post_cheltuieli)
 write.csv(m,"mega_codificat.csv", row.names = FALSE)
 
 x <- m %>% group_by(idSort) %>% summarise(n=n())
+
+benvenuti_codificat <- benvenuti_codificat[!duplicated(benvenuti_codificat$Nume),]
+benvenuti_codificat.csv$Nume <- gsub("\\s*\\w*$", "", benvenuti_codificat.csv$Nume)
+benvenuti_codificat.csv$Nume <- paste(benvenuti_codificat.csv$Nume, " Cod: ",benvenuti_codificat.csv$Cod)
+
+write.csv(benvenuti_codificat.csv, "benvenuti_codificat.csv", row.names = FALSE)
+
+
+deichman_codificat.csv$Nume <- paste(deichman_codificat.csv$Nume, " Cod: ",deichman_codificat.csv$Cod)
+deichman_codificat.csv$Nume <- paste(deichman_codificat.csv$Nume, " Cod: ",deichman_codificat.csv$Cod)
+deichman_codificat.csv <- deichman_codificat.csv[!duplicated(deichman_codificat.csv$Nume),]
+write.csv(deichman_codificat.csv, "deichman_codificat.csv", row.names = FALSE)
+
+
+leonardo_codificat.csv$Nume <- paste(leonardo_codificat.csv$Nume, " Cod: ",leonardo_codificat.csv$Cod)
+leonardo_codificat.csv$Nume <- paste(leonardo_codificat.csv$Nume, " Cod: ",leonardo_codificat.csv$Cod)
+leonardo_codificat.csv <- leonardo_codificat.csv[!duplicated(leonardo_codificat.csv$Nume),]
+write.csv(leonardo_codificat.csv, "leonardo_codificat.csv", row.names = FALSE)
+
