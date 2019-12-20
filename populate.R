@@ -35,7 +35,7 @@ files <- files[c(prod, cod)]
 
 
 fl <- files[prod] 
-for (i in xls) {
+for (i in fl) {
   print(i)
   ipcdb <- dbConnect(RSQLite::SQLite(), "IPC.db")
   try(dbSendQuery(ipcdb, 'INSERT INTO produse (Denumire, Descriere, Pret, Um, Data, idMag, idSort) VALUES (:Denumire, :Descriere, :Pret, :Um, :Data, :idMag, :idSort);', get(i)))
@@ -46,6 +46,7 @@ for (i in xls) {
 
 dbGetQuery(ipcdb, "SELECT count(*) FROM produse")
 dbGetQuery(ipcdb, "SELECT * FROM produse")
+dbGetQuery(ipcdb, "SELECT * FROM magazine")
 dbSendQuery(ipcdb, 'INSERT INTO produse (Denumire, Descriere, Pret, Um, Data, idMag, idSort) VALUES (:Denumire, :Descriere, :Pret, :Um, :Data, :idMag, :idSort);', `20170906m_image.jsprodusv1.csv`)
 dbGetQuery(ipcdb, "delete from produse")
 
