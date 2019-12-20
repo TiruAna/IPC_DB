@@ -34,6 +34,8 @@ cleanxls <- function (df) {
 for (i in xls) {
   assign(i, cleanxls(get(i)))
 }
+
+
 # dbf_list <- lapply(files, function(x) suppressMessages(read.csv(file=x, stringsAsFactors = FALSE)))
 # 
 # for (i in seq(dbf_list)) assign(files[i], dbf_list[[i]])
