@@ -45,3 +45,7 @@ leonardo_codificat.csv$Nume <- paste(leonardo_codificat.csv$Nume, " Cod: ",leona
 leonardo_codificat.csv <- leonardo_codificat.csv[!duplicated(leonardo_codificat.csv$Nume),]
 write.csv(leonardo_codificat.csv, "leonardo_codificat.csv", row.names = FALSE)
 
+zara_codificat.csv$Nume <- paste(zara_codificat.csv$Nume, " Cod: ", zara_codificat.csv$Cod)
+zara_codificat.csv <- zara_codificat.csv[!duplicated(zara_codificat.csv$Nume),]
+zara_codificat.csv$Nume <- as.character(zara_codificat.csv$Nume)
+write.csv(zara_codificat.csv, "zara_codificat.csv", row.names = FALSE)
